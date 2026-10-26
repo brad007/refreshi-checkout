@@ -1,0 +1,122 @@
+# Source of truth for the checkout API.
+#
+# Client operations live next to the feature that owns them
+# (lib/features/*/data/graphql/*.graphql) and are type-checked against this
+# schema by graphql_codegen. The in-app backend in lib/core/graphql/local
+# resolves these root fields without a separate server.
+
+scalar DateTime
+
+type Query {
+  services: [Service!]!
+  availableSlots(days: Int!): [TimeSlot!]!
+  paymentMethods: [PaymentMethod!]!
+  order(id: ID!): Order
+}
+
+type Mutation {
+  "Creates an order and requests a temporary hold on the card. Safe to retry with the same idempotencyKey."
+  createOrder(input: CreateOrderInput!): CreateOrderPayload!
+}
+
+type Subscription {
+  "Emits the current order snapshot immediately, then on every change. Completes once the order is final."
+  orderUpdated(id: ID!): Order!
+}
+
+input CreateOrderInput {
+  idempotencyKey: String!
+  serviceIds: [ID!]!
+  slotId: ID!
+  paymentMethodId: ID!
+}
+
+type CreateOrderPayload {
+  order: Order!
+  "True when this key was already used and the existing order is returned."
+  replayed: Boolean!
+}
+
+"A surplus-food bag offered by a partner store."
+type Service {
+  id: ID!
+  name: String!
+  storeName: String!
+  category: String!
+  description: String!
+  "What the customer pays."
+  priceCents: Int!
+  "Shelf value of the contents."
+  originalPriceCents: Int!
+}
+
+type TimeSlot {
+  id: ID!
+  startsAt: DateTime!
+  endsAt: DateTime!
+}
+
+type PaymentMethod {
+  "Peach Payments registration token for the saved card."
+  id: ID!
+  brand: String!
+  last4: String!
+}
+
+enum OrderStatus {
+  AWAITING_HOLD
+  CONFIRMED
+  PAYMENT_FAILED
+}
+
+enum HoldStatus {
+  PENDING
+  PLACED
+  FAILED
+}
+
+enum TimelineEventType {
+  ORDER_CREATED
+  HOLD_REQUESTED
+  HOLD_PLACED
+  HOLD_FAILED
+}
+
+type OrderItem {
+  serviceId: ID!
+  name: String!
+  priceCents: Int!
+}
+
+type PaymentHold {
+  id: ID!
+  status: HoldStatus!
+  amountCents: Int!
+  "Payment provider, e.g. PEACH_PAYMENTS."
+  provider: String!
+  "Peach paymentType: PA (pre-authorisation)."
+  paymentType: String!
+  "Peach payment id."
+  reference: String!
+  "Peach result code, e.g. 000.200.000 (pending) or 000.100.110 (success, test mode)."
+  resultCode: String!
+  resultDescription: String!
+}
+
+type TimelineEvent {
+  type: TimelineEventType!
+  at: DateTime!
+}
+
+type Order {
+  id: ID!
+  status: OrderStatus!
+  items: [OrderItem!]!
+  slot: TimeSlot!
+  paymentMethod: PaymentMethod!
+  totalCents: Int!
+  currency: String!
+  hold: PaymentHold!
+  timeline: [TimelineEvent!]!
+  createdAt: DateTime!
+}

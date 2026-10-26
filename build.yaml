@@ -1,0 +1,22 @@
+targets:
+  $default:
+    builders:
+      graphql_codegen:
+        options:
+          clients:
+            - graphql
+          scalars:
+            DateTime:
+              type: DateTime
+          outputDirectory: __generated
+      freezed:
+        generate_for:
+          - lib/**/*.dart
+      json_serializable:
+        generate_for:
+          - lib/**/*.dart
+        options:
+          explicit_to_json: true
+      mockito|mockBuilder:
+        generate_for:
+          - test/**/*.dart

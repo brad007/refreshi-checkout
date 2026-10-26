@@ -1,0 +1,33 @@
+fragment ServiceFields on Service {
+  id
+  name
+  storeName
+  category
+  description
+  priceCents
+  originalPriceCents
+}
+
+fragment TimeSlotFields on TimeSlot {
+  id
+  startsAt
+  endsAt
+}
+
+fragment PaymentMethodFields on PaymentMethod {
+  id
+  brand
+  last4
+}
+
+query CheckoutCatalog($days: Int!) {
+  services {
+    ...ServiceFields
+  }
+  availableSlots(days: $days) {
+    ...TimeSlotFields
+  }
+  paymentMethods {
+    ...PaymentMethodFields
+  }
+}
