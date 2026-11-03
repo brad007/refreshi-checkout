@@ -13,43 +13,28 @@ See [SOLUTION.md](SOLUTION.md) for design decisions and trade-offs.
 
 ## Run it
 
-Download the headline font first. Clash Display's licence doesn't allow it to be redistributed through a repository, so each developer fetches their own copy from Fontshare:
+The quickest way is the Makefile. Run `make` to list every command.
 
 ```bash
-./tool/fetch_fonts.sh
+make web
 ```
 
-```bash
-flutter pub get
-```
+That downloads the headline font if needed, fetches packages and runs the app in Chrome with hot reload.
 
-Generated code (GraphQL types, freezed, injectable, auto_route, mocks) is committed, so the app runs straight away. To regenerate it after changing a `.graphql` file or an annotated class:
+**There's no separate backend to start.** The GraphQL API (schema resolvers, idempotency rules, order store) and the Peach Payments simulator run inside the app, in `lib/infrastructure/core/graphql/local/`, and start with it.
 
-```bash
-dart run build_runner build
-```
+| Command | What it does |
+| --- | --- |
+| `make setup` | First-time setup: downloads Clash Display from Fontshare (its licence doesn't allow it in a repository) and runs `flutter pub get` |
+| `make web` | Chrome, with hot reload |
+| `make serve` | Release web build at http://localhost:8686, served so deep links and refresh work (`PORT=...` to change) |
+| `make ios` / `make android` | iOS Simulator / a running Android emulator |
+| `make run DEVICE=...` | Any device from `make devices` |
+| `make codegen` | Regenerates GraphQL types, freezed, injectable, routes and mocks. Generated code is committed, so you only need this after changing a `.graphql` file or an annotated class. |
+| `make check` | `flutter analyze`, then `flutter test` |
+| `make coverage` | Tests with coverage (`coverage/lcov.info`) |
 
-### Web
-
-```bash
-flutter run -d chrome
-```
-
-The app uses path URLs (`/orders/ord_123`, not `/#/orders/ord_123`). `flutter run` serves every path, so deep links and refresh work in development. For a production build, the host must rewrite unknown paths to `index.html`:
-
-```bash
-flutter build web --release
-```
-
-### Mobile
-
-```bash
-flutter run -d ios
-```
-
-```bash
-flutter run -d android
-```
+`make serve` uses `tool/serve_web.py`, a static server that falls back to `index.html`. The app uses path URLs (`/orders/ord_123`), and a plain static server would 404 on refresh. Production hosting needs the same rewrite rule.
 
 ## Try these
 
