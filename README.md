@@ -51,7 +51,7 @@ Orders, the session and the checkout draft are stored in `localStorage` (via `sh
 
 ## Payments: Peach Payments (simulated)
 
-The brief asks for no backend service, so Peach is simulated inside the in-app backend (`lib/core/graphql/local/peach/`). The simulation follows Peach's documented server-to-server API:
+The brief asks for no backend service, so Peach is simulated inside the in-app backend (`lib/infrastructure/core/graphql/local/peach/`). The simulation follows Peach's documented server-to-server API:
 
 - Saved cards are Peach **registration tokens**. The app only ever sees the token and the last four digits. Visa •••• 0000 and Mastercard •••• 5454 are Peach's published test cards; •••• 8079 simulates a decline.
 - Placing an order requests a **pre-authorisation** (`paymentType=PA`) on the token, i.e. `POST /v1/registrations/{id}/payments`, with the amount as a string (`"154.00"`) in ZAR.
@@ -77,22 +77,24 @@ The suite has 289 tests in 39 files: unit tests for every layer, bloc tests, dat
 
 ## Project layout
 
+Layered, DDD-style. Dependencies point inward only: `presentation` → `application` → `domain` ← `infrastructure`.
+
 ```
 lib/
-  core/
-    di/            get_it + injectable setup and the third-party module
-    error/         exceptions (data layer), failures (domain), the mapping between them
-    graphql/
-      schema.graphql       source of truth for the API
-      local/               in-app backend: executor, resolvers, store, Link
-        peach/             Peach Payments simulator and result codes
-    router/        auto_route config, AuthGuard, redirect sanitising
-    usecase/       UseCase / StreamUseCase base types
-    utils/ theme/ widgets/
-  features/
+  domain/          entities, repository contracts, Failure: pure Dart, no Flutter
+    core/ auth/ catalog/ checkout/ orders/
+  application/     use cases and the blocs that orchestrate them
+    core/ auth/ catalog/ checkout/ orders/
+  infrastructure/  repository impls, data sources, DTO mappers, *.graphql operations
+    core/          exceptions → failures, DI module, typed GraphQL client
+      graphql/
+        schema.graphql     source of truth for the API
+        local/             in-app backend: executor, resolvers, store, Link
+          peach/           Peach Payments simulator and result codes
     auth/ catalog/ checkout/ orders/
-      data/        datasources, models/mappers, repository implementations, *.graphql operations
-      domain/      entities, repository contracts, use cases
-      presentation/ blocs, pages, widgets
+  presentation/    pages, widgets, router + AuthGuard, theme, formatters
+    core/ auth/ catalog/ checkout/ orders/
+  injection.dart   composition root (get_it + injectable)
+  main.dart
 test/              mirrors lib/, plus test/flows for end-to-end widget tests
 ```

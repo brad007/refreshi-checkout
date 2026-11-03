@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mockito/mockito.dart';
-import 'package:refreshi_checkout/features/orders/domain/entities/order.dart';
+import 'package:refreshi_checkout/domain/orders/order.dart';
 
 import '../helpers/app_harness.dart';
 import '../helpers/fixtures.dart';

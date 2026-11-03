@@ -2,7 +2,7 @@
 #
 # There is no separate backend to start: the GraphQL API (schema, resolvers,
 # idempotency rules) and the Peach Payments simulator run inside the app
-# (lib/core/graphql/local/), and start with it on every target below.
+# (lib/infrastructure/core/graphql/local/), and start with it on every target below.
 
 PORT ?= 8686
 DEVICE ?= chrome

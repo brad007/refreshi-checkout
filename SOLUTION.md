@@ -4,7 +4,7 @@
 
 | Concern | Choice |
 | --- | --- |
-| Architecture | Clean Architecture, split by feature into `data`, `domain` and `presentation` layers, built test-first. Use cases are the only way into the domain. |
+| Architecture | Layered (DDD-style): `domain`, `application`, `infrastructure`, `presentation` as top-level folders, each split by feature. Dependencies point inward only; built test-first. |
 | State | `flutter_bloc`, with `bloc_concurrency` transformers |
 | DI | `get_it` + `injectable` |
 | Routing | `auto_route` (declarative, path-based, with guards) |
@@ -21,17 +21,26 @@
 
 ## Architecture
 
+Four layers, each a top-level folder in `lib/` and split by feature inside (`auth`, `catalog`, `checkout`, `orders`, plus `core` for shared pieces):
+
+| Layer | Contains | May import |
+| --- | --- | --- |
+| `domain/` | Entities (freezed), repository contracts, the sealed `Failure` | nothing else in the app, not even Flutter |
+| `application/` | Use cases, and the blocs that orchestrate them | `domain` |
+| `infrastructure/` | Repository implementations, data sources, DTO mappers, `.graphql` operations, the typed client, the in-app backend and the Peach simulator | `domain` |
+| `presentation/` | Pages, widgets, router and guard, theme, formatters | `application`, `domain` |
+
+`lib/injection.dart` is the composition root: the only place that sees every layer and wires infrastructure implementations to domain contracts. Nothing in `application` or `presentation` imports `infrastructure`, which an import scan over all 84 source files confirms.
+
 ```
-UI (pages, widgets)
-  └─ Bloc ─── events in, freezed states out
-       └─ UseCase ─── one action, returns Either<Failure, T> or Stream<Either<…>>
-            └─ Repository (contract in domain, impl in data)
-                 └─ DataSource ─── throws ServerException / NetworkException / CacheException
-                      └─ GraphQLClient (typed, generated) ─ LocalGraphQLLink ─ in-app backend
-                      └─ SharedPreferences
+presentation  pages, widgets ──events──▶ Bloc ◀──states──
+application   Bloc ─▶ UseCase ─── Either<Failure, T> or Stream<Either<…>>
+domain        Repository contract · entities · Failure
+infrastructure  Repository impl ─▶ DataSource ─▶ GraphQLClient ─▶ LocalGraphQLLink ─▶ in-app backend
+                                             └─▶ SharedPreferences
 ```
 
-- **Domain entities are free of transport types.** The generated GraphQL classes act as the data-layer models. Mapper extensions (`toEntity()`) convert them, so nothing above `data/` imports generated code.
+- **Domain entities are free of transport types.** The generated GraphQL classes act as infrastructure DTOs. Mapper extensions (`toEntity()`) convert them, so nothing outside `infrastructure/` imports generated code.
 - **Errors are values.** Data sources throw typed exceptions. One function (`mapExceptionToFailure`) turns them into a sealed `Failure` union. Blocs switch over failures exhaustively and each failure has a `userMessage`.
 - **DI.** Every repository, data source and use case is `@LazySingleton(as: Contract)`. App-wide blocs (`AuthBloc`, `CatalogBloc`, `CheckoutBloc`) are singletons exposed with `BlocProvider.value`. `OrderDetailsBloc` is a factory, one per page. Tests swap anything by constructing classes with mocks or by re-registering in `getIt`.
 
@@ -44,7 +53,7 @@ UI (pages, widgets)
 
 ## Typed GraphQL without a server
 
-- `lib/core/graphql/schema.graphql` is the API contract. Operations live with their feature (`features/*/data/graphql/*.graphql`). `graphql_codegen` validates them against the schema at build time and generates types.
+- `lib/infrastructure/core/graphql/schema.graphql` is the API contract. Operations live with their feature (`infrastructure/*/graphql/*.graphql`). `graphql_codegen` validates them against the schema at build time and generates types.
 - The client is a normal `GraphQLClient`. The only difference from production is its terminating link: `LocalGraphQLLink` runs operations in-process. Swapping it for an `HttpLink` would point the app at a real server.
 - `LocalGraphQLExecutor` is a deliberately small executor. Root-field resolvers return JSON-like objects, and the executor projects them onto the request's selection set, handling aliases, fragment spreads, inline fragments, variables and defaults. Responses therefore have exactly the shape the generated parsers expect. Resolver errors become GraphQL errors with `extensions.code`, as a real server would send.
 - `LocalCheckoutBackend` holds the business rules: validation, idempotent order creation and the simulated payment hold. Its store writes through to `localStorage`, so orders survive refresh like server data would. Pending holds are re-armed on startup with their original due time.
@@ -126,7 +135,7 @@ I chose **tests** over a web performance tweak, and went beyond the single test 
 
 - 289 tests; over 99% line coverage of hand-written `lib/` code.
 - The Peach simulator and result-code classification have their own tests, including duplicate and out-of-order webhooks.
-- Domain and data layers use mockito mocks for every collaborator.
+- Application and infrastructure tests use mockito mocks for every collaborator.
 - Data sources are tested against the **real** local GraphQL stack, which exercises generated documents, the executor and the parsers end to end.
 - Bloc tests cover the double-submit and resume-after-reload paths.
 - `test/flows` boots the real app (router, guard and blocs) with mocked use cases and drives it like a user would: deep links while signed out, refreshed sign-in, double click, resumed submission, idempotency conflict, live hold update and phone layouts.

@@ -1,7 +1,7 @@
 import 'package:graphql/client.dart';
-import 'package:refreshi_checkout/core/graphql/local/local_backend_store.dart';
-import 'package:refreshi_checkout/core/graphql/local/local_checkout_backend.dart';
-import 'package:refreshi_checkout/core/graphql/local/local_graphql_link.dart';
+import 'package:refreshi_checkout/infrastructure/core/graphql/local/local_backend_store.dart';
+import 'package:refreshi_checkout/infrastructure/core/graphql/local/local_checkout_backend.dart';
+import 'package:refreshi_checkout/infrastructure/core/graphql/local/local_graphql_link.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// A real typed client talking to the real in-app backend, with no latency.

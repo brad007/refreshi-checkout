@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mockito/mockito.dart';
-import 'package:refreshi_checkout/core/error/failures.dart';
-import 'package:refreshi_checkout/features/catalog/presentation/pages/catalog_page.dart';
-import 'package:refreshi_checkout/features/checkout/domain/entities/checkout_draft.dart';
-import 'package:refreshi_checkout/features/orders/domain/entities/order.dart';
+import 'package:refreshi_checkout/domain/core/failures.dart';
+import 'package:refreshi_checkout/presentation/catalog/catalog_page.dart';
+import 'package:refreshi_checkout/domain/checkout/checkout_draft.dart';
+import 'package:refreshi_checkout/domain/orders/order.dart';
 
 import '../helpers/app_harness.dart';
 import '../helpers/fixtures.dart';

@@ -1,11 +1,11 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:mockito/mockito.dart';
-import 'package:refreshi_checkout/core/error/failures.dart';
-import 'package:refreshi_checkout/features/auth/domain/entities/user_session.dart';
-import 'package:refreshi_checkout/features/catalog/domain/entities/checkout_catalog.dart';
-import 'package:refreshi_checkout/features/checkout/domain/entities/checkout_draft.dart';
-import 'package:refreshi_checkout/features/orders/domain/entities/order.dart';
-import 'package:refreshi_checkout/features/orders/domain/entities/order_placement.dart';
+import 'package:refreshi_checkout/domain/core/failures.dart';
+import 'package:refreshi_checkout/domain/auth/user_session.dart';
+import 'package:refreshi_checkout/domain/catalog/checkout_catalog.dart';
+import 'package:refreshi_checkout/domain/checkout/checkout_draft.dart';
+import 'package:refreshi_checkout/domain/orders/order.dart';
+import 'package:refreshi_checkout/domain/orders/order_placement.dart';
 
 import 'fixtures.dart';
 
