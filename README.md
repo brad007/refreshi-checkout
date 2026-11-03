@@ -4,6 +4,8 @@ A web-first checkout slice in Flutter, styled after [refreshi.co.za](https://ref
 
 The same codebase runs on iOS and Android. There is no backend service: the GraphQL schema lives in the repo and an in-app backend resolves it.
 
+**Demo video (5 min, voice-over):** [docs/demo.mp4](docs/demo.mp4)
+
 See [SOLUTION.md](SOLUTION.md) for design decisions and trade-offs.
 
 ## Requirements
